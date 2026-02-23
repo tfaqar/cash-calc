@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>حساب الاقساط مع المقدمة</title>
+    <style>
+        body { 
+            font-family: -apple-system, system-ui, BlinkMacSystemFont, "Segoe UI", Roboto; 
+            display: flex; 
+            justify-content: center; 
+            padding: 20px; 
+            background: #f0f2f5; 
+            margin: 0;
+            -webkit-font-smoothing: antialiased;
+        }
+        .calc-card { 
+            background: white; 
+            padding: 25px; 
+            border-radius: 20px; 
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1); 
+            width: 100%; 
+            max-width: 450px; 
+        }
+        h2 { text-align: center; color: #1a1a1a; margin-bottom: 25px; font-size: 22px; }
+        .input-group { margin-bottom: 20px; }
+        label { display: block; margin-bottom: 8px; font-weight: 600; color: #444; font-size: 16px; }
+        
+        input, select { 
+            width: 100%; 
+            padding: 16px; 
+            border: 2px solid #eee; 
+            border-radius: 12px; 
+            box-sizing: border-box; 
+            font-size: 18px; /* Must be 16px+ for iPhone to prevent auto-zoom */
+            background: #fafafa;
+            text-align: right;
+            appearance: none; /* Fix for Safari select styling */
+            -webkit-appearance: none;
+        }
+        input:focus { border-color: #007bff; outline: none; background: #fff; }
+        
+        button { 
+            width: 100%; 
+            padding: 18px; 
+            background: #007bff; 
+            color: white; 
+            border: none; 
+            border-radius: 12px; 
+            font-size: 20px; 
+            font-weight: bold; 
+            cursor: pointer; 
+            margin-top: 10px;
+            -webkit-tap-highlight-color: transparent;
+        }
+        button:active { background: #0056b3; transform: scale(0.98); }
+        
+        .result-box { 
+            margin-top: 30px; 
+            padding: 20px; 
+            background: #f8f9fa; 
+            border: 2px dashed #ddd;
+            border-radius: 15px; 
+            text-align: center; 
+        }
+        #finalResult { font-size: 32px; color: #28a745; font-weight: 800; display: block; margin-top: 10px; }
+    </style>
+</head>
+<body>
+
+<div class="calc-card">
+    <h2>حساب الاقساط مع المقدمة</h2>
+    
+    <div class="input-group">
+        <label>القسط الشهري الاصلي</label>
+        <input type="text" id="monthly" placeholder="0" inputmode="decimal">
+    </div>
+
+    <div class="input-group">
+        <label>فترة الاقساط (أشهر)</label>
+        <select id="period">
+            <option value="12">12 شهر</option>
+            <option value="18">18 شهر</option>
+            <option value="24">24 شهر</option>
+        </select>
+    </div>
+
+    <div class="input-group">
+        <label>المقدمة</label>
+        <input type="text" id="cash" placeholder="0" inputmode="decimal">
+    </div>
+
+    <button type="button" onclick="calculateInstallment()">احسب القسط الجديد</button>
+
+    <div class="result-box">
+        <div style="color: #666;">القسط بعد المقدمة:</div>
+        <span id="finalResult">0</span>
+    </div>
+</div>
+
+<script>
+    // iOS-Friendly Comma Formatter
+    function formatValue(val) {
+        val = val.replace(/[^\d.]/g, ""); // Remove anything not a digit or dot
+        if(!val) return "";
+        let parts = val.split(".");
+        parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+        return parts.join(".");
+    }
+
+    // Attach listeners that work across all mobile browsers
+    const inputs = [document.getElementById('monthly'), document.getElementById('cash')];
+    inputs.forEach(input => {
+        input.addEventListener('input', function(e) {
+            // Save cursor position for iOS
+            let cursor = this.selectionStart;
+            let oldLen = this.value.length;
+            
+            this.value = formatValue(this.value);
+            
+            // Adjust cursor position after adding commas
+            let newLen = this.value.length;
+            this.setSelectionRange(cursor + (newLen - oldLen), cursor + (newLen - oldLen));
+        });
+    });
+
+    function calculateInstallment() {
+        // Clean values by removing commas before math
+        const getVal = (id) => parseFloat(document.getElementById(id).value.replace(/,/g, '')) || 0;
+
+        const monthly = getVal('monthly');
+        const cash = getVal('cash');
+        const period = parseInt(document.getElementById('period').value);
+        
+        let result = 0;
+
+        if (period === 12) {
+            result = ((monthly * 12 / 210 * 150) - cash) / 150 * 210 / 12;
+        } else if (period === 18) {
+            result = ((monthly * 18 / 235 * 150) - cash) / 150 * 235 / 18;
+        } else if (period === 24) {
+            result = ((monthly * 24 / 260 * 150) - cash) / 150 * 260 / 24;
+        }
+
+        const roundedResult = Math.ceil(result / 500) * 500;
+
+        // Final UI update
+        document.getElementById('finalResult').innerText = roundedResult.toLocaleString('en-US');
+    }
+</script>
+
+</body>
+</html>
