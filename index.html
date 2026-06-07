@@ -22,7 +22,35 @@
             width: 100%; 
             max-width: 450px; 
         }
-        h2 { text-align: center; color: #1a1a1a; margin-bottom: 25px; font-size: 22px; }
+        h2 { text-align: center; color: #1a1a1a; margin-bottom: 20px; font-size: 22px; }
+        
+        /* تصميم التبويبات في الأعلى */
+        .tabs {
+            display: flex;
+            background: #f1f3f5;
+            padding: 5px;
+            border-radius: 12px;
+            margin-bottom: 25px;
+        }
+        .tab-btn {
+            flex: 1;
+            padding: 12px 5px;
+            background: transparent;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: bold;
+            color: #666;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-align: center;
+        }
+        .tab-btn.active {
+            background: white;
+            color: #007bff;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+        }
+
         .input-group { margin-bottom: 20px; }
         label { display: block; margin-bottom: 8px; font-weight: 600; color: #444; font-size: 16px; }
         
@@ -32,15 +60,30 @@
             border: 2px solid #eee; 
             border-radius: 12px; 
             box-sizing: border-box; 
-            font-size: 18px; /* Must be 16px+ for iPhone to prevent auto-zoom */
+            font-size: 18px; 
             background: #fafafa;
             text-align: right;
-            appearance: none; /* Fix for Safari select styling */
+            appearance: none; 
             -webkit-appearance: none;
         }
         input:focus { border-color: #007bff; outline: none; background: #fff; }
         
-        button { 
+        .select-wrapper {
+            position: relative;
+        }
+        /* سهم مخصص للقوائم المنسدلة بسبب إلغاء التصميم الافتراضي في سفاري */
+        .select-wrapper::after {
+            content: "▼";
+            font-size: 12px;
+            color: #aaa;
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            pointer-events: none;
+        }
+
+        button.calc-btn { 
             width: 100%; 
             padding: 18px; 
             background: #007bff; 
@@ -52,8 +95,9 @@
             cursor: pointer; 
             margin-top: 10px;
             -webkit-tap-highlight-color: transparent;
+            transition: background 0.1s, transform 0.1s;
         }
-        button:active { background: #0056b3; transform: scale(0.98); }
+        button.calc-btn:active { background: #0056b3; transform: scale(0.98); }
         
         .result-box { 
             margin-top: 30px; 
@@ -63,7 +107,14 @@
             border-radius: 15px; 
             text-align: center; 
         }
-        #finalResult { font-size: 32px; color: #28a745; font-weight: 800; display: block; margin-top: 10px; }
+        #finalResult { 
+            font-size: 32px; 
+            color: #28a745; 
+            font-weight: 800; 
+            display: block; 
+            margin-top: 10px; 
+            transition: transform 0.1s ease-in-out;
+        }
     </style>
 </head>
 <body>
@@ -71,18 +122,26 @@
 <div class="calc-card">
     <h2>حساب الاقساط مع المقدمة</h2>
     
+    <div class="tabs">
+        <button class="tab-btn active" onclick="switchMethod('bikes')">الدراجات</button>
+        <button class="tab-btn" onclick="switchMethod('appliances')">الأجهزة والموبايلات</button>
+        <button class="tab-btn" onclick="switchMethod('offers')">قسم العروض</button>
+    </div>
+    
     <div class="input-group">
-        <label>القسط الشهري الاصلي</label>
-        <input type="text" id="monthly" placeholder="0" inputmode="decimal">
+        <label id="firstInputLabel">السعر</label>
+        <input type="text" id="mainInput" placeholder="0" inputmode="decimal">
     </div>
 
     <div class="input-group">
         <label>فترة الاقساط (أشهر)</label>
-        <select id="period">
-            <option value="12">12 شهر</option>
-            <option value="18">18 شهر</option>
-            <option value="24">24 شهر</option>
-        </select>
+        <div class="select-wrapper">
+            <select id="period">
+                <option value="12">12 شهر</option>
+                <option value="18">18 شهر</option>
+                <option value="24">24 شهر</option>
+            </select>
+        </div>
     </div>
 
     <div class="input-group">
@@ -90,7 +149,7 @@
         <input type="text" id="cash" placeholder="0" inputmode="decimal">
     </div>
 
-    <button type="button" onclick="calculateInstallment()">احسب القسط الجديد</button>
+    <button type="button" class="calc-btn" onclick="calculateInstallment()">احسب القسط الجديد</button>
 
     <div class="result-box">
         <div style="color: #666;">القسط بعد المقدمة:</div>
@@ -99,53 +158,101 @@
 </div>
 
 <script>
-    // iOS-Friendly Comma Formatter
+    // المتغير الحالي لطريقة الحساب (الافتراضي: الدراجات)
+    let currentMethod = 'bikes';
+
+    // التبديل بين الأقسام
+    function switchMethod(method) {
+        currentMethod = method;
+        
+        // تحديث شكل الأزرار النشطة
+        const buttons = document.querySelectorAll('.tab-btn');
+        buttons.forEach(btn => btn.classList.remove('active'));
+        event.target.classList.add('active');
+        
+        // تغيير مسمى الإدخال الأول بناءً على القسم
+        const label = document.getElementById('firstInputLabel');
+        if (method === 'bikes') {
+            label.innerText = 'السعر';
+        } else {
+            label.innerText = 'القسط الشهري الاصلي';
+        }
+        
+        // تصفير النتيجة السابقة عند التبديل
+        document.getElementById('finalResult').innerText = '0';
+    }
+
+    // منسق الفوامل التلقائي المتوافق مع الهواتف الذكية
     function formatValue(val) {
-        val = val.replace(/[^\d.]/g, ""); // Remove anything not a digit or dot
+        val = val.replace(/[^\d.]/g, ""); 
         if(!val) return "";
         let parts = val.split(".");
         parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ",");
         return parts.join(".");
     }
 
-    // Attach listeners that work across all mobile browsers
-    const inputs = [document.getElementById('monthly'), document.getElementById('cash')];
+    // ربط مستمعي الأحداث بخانات الإدخال للفصل التلقائي
+    const inputs = [document.getElementById('mainInput'), document.getElementById('cash')];
     inputs.forEach(input => {
         input.addEventListener('input', function(e) {
-            // Save cursor position for iOS
             let cursor = this.selectionStart;
             let oldLen = this.value.length;
             
             this.value = formatValue(this.value);
             
-            // Adjust cursor position after adding commas
             let newLen = this.value.length;
             this.setSelectionRange(cursor + (newLen - oldLen), cursor + (newLen - oldLen));
         });
     });
 
+    // دالة المعالجة الحسابية الرئيسية
     function calculateInstallment() {
-        // Clean values by removing commas before math
         const getVal = (id) => parseFloat(document.getElementById(id).value.replace(/,/g, '')) || 0;
 
-        const monthly = getVal('monthly');
+        const mainInputValue = getVal('mainInput'); // يمثل السعر أو القسط الأصلي حسب القسم
         const cash = getVal('cash');
         const period = parseInt(document.getElementById('period').value);
         
         let result = 0;
 
-        if (period === 12) {
-            result = ((monthly * 12 / 210 * 150) - cash) / 150 * 210 / 12;
-        } else if (period === 18) {
-            result = ((monthly * 18 / 235 * 150) - cash) / 150 * 235 / 18;
-        } else if (period === 24) {
-            result = ((monthly * 24 / 260 * 150) - cash) / 150 * 260 / 24;
+        if (currentMethod === 'bikes') {
+            // ---- 1. طريقة الدراجات ----
+            if (period === 12) {
+                result = ((mainInputValue - cash) / 150 * 210) / 12;
+            } else if (period === 18) {
+                result = ((mainInputValue - cash) / 150 * 235) / 18;
+            } else if (period === 24) {
+                result = ((mainInputValue - cash) / 150 * 260) / 24;
+            }
+        } else if (currentMethod === 'appliances') {
+            // ---- 2. طريقة الأجهزة والموبايلات (الأصلية) ----
+            if (period === 12) {
+                result = ((mainInputValue * 12 / 210 * 160) - cash) / 150 * 210 / 12;
+            } else if (period === 18) {
+                result = ((mainInputValue * 18 / 235 * 160) - cash) / 150 * 235 / 18;
+            } else if (period === 24) {
+                result = ((mainInputValue * 24 / 260 * 160) - cash) / 150 * 260 / 24;
+            }
+        } else if (currentMethod === 'offers') {
+            // ---- 3. طريقة قسم العروض (الأصلية مع تعديل الثوابت) ----
+            if (period === 12) {
+                result = ((mainInputValue * 12 / 205 * 160) - cash) / 150 * 205 / 12;
+            } else if (period === 18) {
+                result = ((mainInputValue * 18 / 230 * 160) - cash) / 150 * 230 / 18;
+            } else if (period === 24) {
+                result = ((mainInputValue * 24 / 255 * 160) - cash) / 150 * 255 / 24;
+            }
         }
 
-        const roundedResult = Math.ceil(result / 500) * 500;
+        // التقريب لأقرب 250 للأعلى دائماً
+        const roundedResult = Math.ceil(result / 250) * 250;
 
-        // Final UI update
-        document.getElementById('finalResult').innerText = roundedResult.toLocaleString('en-US');
+        // تحديث واجهة المستخدم مع حركة فلاش للتأكيد البصري
+        const resultEl = document.getElementById('finalResult');
+        resultEl.innerText = roundedResult.toLocaleString('en-US');
+
+        resultEl.style.transform = "scale(1.1)";
+        setTimeout(() => { resultEl.style.transform = "scale(1)"; }, 100);
     }
 </script>
 
