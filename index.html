@@ -47,7 +47,7 @@
         }
         .tab-btn.active {
             background: white;
-            color: #007bff;
+            color: #2b3a5d; /* اللون الكحلي الجديد للتبويب النشط */
             box-shadow: 0 4px 10px rgba(0,0,0,0.05);
         }
 
@@ -66,7 +66,7 @@
             appearance: none; 
             -webkit-appearance: none;
         }
-        input:focus { border-color: #007bff; outline: none; background: #fff; }
+        input:focus { border-color: #2b3a5d; outline: none; background: #fff; } /* تغيير إطار التركيز للكحلي */
         
         .select-wrapper {
             position: relative;
@@ -86,7 +86,7 @@
         button.calc-btn { 
             width: 100%; 
             padding: 18px; 
-            background: #007bff; 
+            background: #2b3a5d; /* تغيير لون الزر الرئيسي إلى الكحلي الداكن */
             color: white; 
             border: none; 
             border-radius: 12px; 
@@ -97,7 +97,7 @@
             -webkit-tap-highlight-color: transparent;
             transition: background 0.1s, transform 0.1s;
         }
-        button.calc-btn:active { background: #0056b3; transform: scale(0.98); }
+        button.calc-btn:active { background: #1c263f; transform: scale(0.98); } /* درجة أغمق عند الضغط */
         
         .result-box { 
             margin-top: 30px; 
@@ -109,7 +109,7 @@
         }
         #finalResult { 
             font-size: 32px; 
-            color: #28a745; 
+            color: #ef7e2d; /* تغيير لون رقم النتيجة النهائي إلى البرتقالي المختار */
             font-weight: 800; 
             display: block; 
             margin-top: 10px; 
@@ -209,7 +209,7 @@
     function calculateInstallment() {
         const getVal = (id) => parseFloat(document.getElementById(id).value.replace(/,/g, '')) || 0;
 
-        const mainInputValue = getVal('mainInput'); // يمثل السعر أو القسط الأصلي حسب القسم
+        const mainInputValue = getVal('mainInput'); 
         const cash = getVal('cash');
         const period = parseInt(document.getElementById('period').value);
         
@@ -236,11 +236,11 @@
         } else if (currentMethod === 'offers') {
             // ---- 3. طريقة قسم العروض (الأصلية مع تعديل الثوابت) ----
             if (period === 12) {
-                result = ((mainInputValue * 12 / 205 * 160) - cash) / 150 * 205 / 12;
+                result = ((mainInputValue * 12 / 205 * 150) - cash) / 150 * 205 / 12;
             } else if (period === 18) {
-                result = ((mainInputValue * 18 / 230 * 160) - cash) / 150 * 230 / 18;
+                result = ((mainInputValue * 18 / 230 * 150) - cash) / 150 * 230 / 18;
             } else if (period === 24) {
-                result = ((mainInputValue * 24 / 255 * 160) - cash) / 150 * 255 / 24;
+                result = ((mainInputValue * 24 / 255 * 150) - cash) / 150 * 255 / 24;
             }
         }
 
